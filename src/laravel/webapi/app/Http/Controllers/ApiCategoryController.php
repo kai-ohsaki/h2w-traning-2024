@@ -4,7 +4,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ApiCategoryController extends Controller
 {
@@ -16,6 +18,21 @@ class ApiCategoryController extends Controller
         $items = Category::all();
         return response()->json([
             'data' => $items,
+        ], 200);
+    }
+
+
+
+    /**
+     * カテゴリの slug を指定して、商品一覧を取得する
+     */
+    public function products( $category_slug )
+    {
+        $items = Category::with('products')
+                    ->where('slug', $category_slug)
+                    ->get();
+        return response()->json([
+            'data' => $items
         ], 200);
     }
 
@@ -34,7 +51,6 @@ class ApiCategoryController extends Controller
         $category->display = $request->input('display');
         $category->created_at = now();
         $category->updated_at = now();
-        $category->is_delete = false;
         $category->save();
 
         return response()->json([
@@ -46,15 +62,16 @@ class ApiCategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Category $category)
+    public function show($id)
     {
-        $item = Category::find($category->id);
+        $item = Category::find($id);
         if ($item) {
             return response()->json([
                 'data' => $item,
             ], 200);
         } else {
             return response()->json([
+                'data' => null,
                 'message' => 'Not found',
             ], 200);
         }
